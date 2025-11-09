@@ -1,0 +1,37 @@
+{
+  "name": "dealshield",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
+    "@stripe/stripe-js": "^8.2.0",
+    "@supabase/ssr": "^0.7.0",
+    "@supabase/supabase-js": "^2.76.1",
+    "@tailwindcss/postcss": "^4.1.16",
+    "@vercel/blob": "^2.0.0",
+    "jspdf": "^2.5.2",
+    "lucide-react": "^0.552.0",
+    "mammoth": "^1.11.0",
+    "next": "^15.0.3",
+    "pdf-parse": "^2.4.5",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "reactflow": "^11.11.4",
+    "stripe": "^19.1.0",
+    "tesseract.js": "^6.0.1",
+    "zustand": "^5.0.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.3",
+    "@types/react": "^19.0.2",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^4.1.16",
+    "typescript": "^5.6.3"
+  }
+}
