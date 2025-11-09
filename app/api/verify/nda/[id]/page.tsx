@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import SignOutButton from '@/app/dashboard/SignOutButton'
 
-export default async function NDAResultsPage({ params }: { params: { id: string } }) {
+export default async function NDAResultsPage({ params }: { params: Promise<{ id: string }> }) {
   const supabase = await createClient()
   
   // Get current user
@@ -13,11 +13,14 @@ export default async function NDAResultsPage({ params }: { params: { id: string 
     redirect('/sign-in')
   }
 
+  // Await params
+  const { id } = await params
+
   // Fetch verification results
   const { data: verification, error } = await supabase
     .from('document_verifications')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', id)
     .eq('user_id', user.id)
     .single()
 
