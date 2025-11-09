@@ -1558,7 +1558,7 @@ Make 15-25 tool calls MAXIMUM. Be thorough but efficient. Apply leniency intelli
         );
 
         if (textBlock) {
-          let jsonText = textBlock.text.trim();
+          let jsonText = textBlock.text?.trim() || '';
           
           const jsonMatch = jsonText.match(/```json\s*([\s\S]*?)\s*```/) || 
                            jsonText.match(/```\s*([\s\S]*?)\s*```/) ||
