@@ -4,7 +4,7 @@ import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-10-28.acacia',
+  apiVersion: '2025-09-30.clover',
 });
 
 const supabase = createClient(
@@ -67,7 +67,6 @@ export async function POST(request: NextRequest) {
         stripe_customer_id: customerId,
         stripe_subscription_id: subscriptionId,
         subscription_status: subscription.status,
-        current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
       })
       .eq('id', userId);
 

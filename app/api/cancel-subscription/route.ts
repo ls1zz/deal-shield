@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import Stripe from 'stripe'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-11-20.acacia'
+  apiVersion: '2025-09-30.clover'
 })
 
 export async function POST(request: Request) {
@@ -61,11 +61,9 @@ export async function POST(request: Request) {
       message: 'Subscription canceled successfully',
       subscription: {
         id: subscription.id,
-        cancel_at: subscription.cancel_at,
-        current_period_end: subscription.current_period_end
+        cancel_at: subscription.cancel_at
       }
     })
-
   } catch (error: any) {
     console.error('Error canceling subscription:', error)
     return NextResponse.json(

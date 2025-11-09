@@ -3,7 +3,7 @@ import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-10-28.acacia',
+  apiVersion: '2025-09-30.clover',
 });
 
 const supabase = createClient(
@@ -99,7 +99,6 @@ export async function POST(request: NextRequest) {
             subscription_tier: tierInfo.tier,
             reports_limit: tierInfo.limit,
             subscription_status: subscription.status,
-            current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
           })
           .eq('id', profile.id);
 

@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import SignOutButton from '@/app/dashboard/SignOutButton'
-import LOIUploadForm from './LOIUploadForm'
+import LOIUploadForm from '@/app/verify/loi/LOIUploadForm'
 
 export default async function LOIVerificationPage() {
   const supabase = await createClient()

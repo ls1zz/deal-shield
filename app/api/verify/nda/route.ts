@@ -158,6 +158,36 @@ Return your analysis in this EXACT JSON format:
 
 Be thorough and specific. If you cannot find certain information about parties, note whether this is normal for the sector or genuinely concerning.`
 
+    // Build content array based on file type
+    const contentArray: any[] = []
+    
+    if (mediaType.startsWith('image/')) {
+      // For images, use the 'image' type
+      contentArray.push({
+        type: 'image',
+        source: {
+          type: 'base64',
+          media_type: mediaType,
+          data: base64,
+        },
+      })
+    } else {
+      // For PDFs and documents, use 'document' type with 'as any' to bypass type checking
+      contentArray.push({
+        type: 'document',
+        source: {
+          type: 'base64',
+          media_type: mediaType,
+          data: base64,
+        },
+      } as any)
+    }
+    
+    contentArray.push({
+      type: 'text',
+      text: prompt,
+    })
+
     // Call Claude API with document
     const message = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
@@ -165,20 +195,7 @@ Be thorough and specific. If you cannot find certain information about parties, 
       messages: [
         {
           role: 'user',
-          content: [
-            {
-              type: 'document',
-              source: {
-                type: 'base64',
-                media_type: mediaType,
-                data: base64,
-              },
-            },
-            {
-              type: 'text',
-              text: prompt,
-            },
-          ],
+          content: contentArray,
         },
       ],
     })

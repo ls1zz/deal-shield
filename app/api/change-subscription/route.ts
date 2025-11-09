@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import Stripe from 'stripe'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-11-20.acacia'
+  apiVersion: '2025-09-30.clover'
 })
 
 // Map price IDs to tiers and limits
@@ -62,7 +62,7 @@ export async function POST(request: Request) {
     const isTrialing = subscription.status === 'trialing'
 
     // Build update params
-    const updateParams: any = {
+    const updateParams: Stripe.SubscriptionUpdateParams = {
       items: [
         {
           id: subscriptionItemId,
@@ -109,7 +109,6 @@ export async function POST(request: Request) {
         isUpgrade
       }
     })
-
   } catch (error: any) {
     console.error('Error changing subscription:', error)
     return NextResponse.json(

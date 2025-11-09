@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import SignOutButton from '@/app/dashboard/SignOutButton'
-import NDAUploadForm from './NDAUploadForm'
+import NDAUploadForm from '@/app/verify/nda/NDAUploadForm'
 
 export default async function NDAVerificationPage() {
   const supabase = await createClient()
