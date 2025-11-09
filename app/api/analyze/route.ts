@@ -1557,8 +1557,8 @@ Make 15-25 tool calls MAXIMUM. Be thorough but efficient. Apply leniency intelli
           (block: any) => block.type === "text"
         );
 
-        if (textBlock) {
-          let jsonText = (textBlock as any).text?.trim() || '';
+        if (textBlock && 'text' in textBlock) {
+          let jsonText = textBlock.text?.trim() || '';
           
           const jsonMatch = jsonText.match(/```json\s*([\s\S]*?)\s*```/) || 
                            jsonText.match(/```\s*([\s\S]*?)\s*```/) ||
@@ -1672,7 +1672,7 @@ Return ONLY the JSON report structure - no more tools, no more investigation.`
           (block: any) => block.type === "text"
         );
         
-        if (finalTextBlock) {
+        if (finalTextBlock && 'text' in finalTextBlock) {
           let jsonText = finalTextBlock.text.trim();
           const jsonMatch = jsonText.match(/```json\s*([\s\S]*?)\s*```/) || 
                            jsonText.match(/```\s*([\s\S]*?)\s*```/) ||
