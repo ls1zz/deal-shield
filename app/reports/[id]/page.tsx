@@ -12,7 +12,7 @@ interface FormData {
   [key: string]: any
 }
 
-export default function ReportPage({ params }: { params: { id: string } }) {
+export default function ReportPage({ params }: { params: Promise<{ id: string }> }) {
   const [step, setStep] = useState<'category' | 'form' | 'results'>('category')
   const [formData, setFormData] = useState<FormData>({ category: 'general' })
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['transaction', 'seller']))
@@ -21,11 +21,14 @@ export default function ReportPage({ params }: { params: { id: string } }) {
   const [error, setError] = useState('')
   const [profile, setProfile] = useState<any>(null)
   const [reportData, setReportData] = useState<any>(null)
+  const [reportId, setReportId] = useState<string>('')
   const router = useRouter()
-  const reportId = params.id
 
   useEffect(() => {
     async function loadData() {
+      const { id } = await params
+      setReportId(id)
+      
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
       
@@ -49,7 +52,7 @@ export default function ReportPage({ params }: { params: { id: string } }) {
       const { data: report } = await supabase
         .from('reports')
         .select('*')
-        .eq('id', reportId)
+        .eq('id', id)
         .eq('user_id', user.id)
         .single()
 
@@ -68,7 +71,7 @@ export default function ReportPage({ params }: { params: { id: string } }) {
       }
     }
     loadData()
-  }, [router, reportId])
+  }, [router, params])
 
   const categories = [
     { id: 'automotive', name: 'Collectible Automotive', icon: '🏎️', description: 'Classic cars, supercars, vintage vehicles' },
