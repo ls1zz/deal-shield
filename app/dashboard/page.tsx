@@ -1,84 +1,56 @@
-'use client'
-
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import SignOutButton from '@/app/dashboard/SignOutButton'
 import DeleteReportButton from './DeleteReportButton'
-import { useState, useEffect } from 'react'
 
-export default function DashboardPage() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [user, setUser] = useState<any>(null)
-  const [reports, setReports] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+export default async function DashboardPage() {
+  const supabase = await createClient()
+  
+  // Get current user
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  
+  if (authError || !user) {
+    redirect('/sign-in')
+  }
 
-  useEffect(() => {
-    async function loadData() {
-      const supabase = createClient()
-      
-      const { data: { user }, error: authError } = await supabase.auth.getUser()
-      
-      if (authError || !user) {
-        redirect('/sign-in')
-        return
-      }
+  // Fetch all reports for this user
+  const { data: reports, error: reportsError } = await supabase
+    .from('reports')
+    .select('*')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false })
 
-      setUser(user)
+  const allReports = reports || []
 
-      const { data: reportsData } = await supabase
-        .from('reports')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-
-      const allReports = reportsData || []
-
-      // Auto-delete reports older than 72 hours
-      const seventyTwoHoursAgo = new Date()
-      seventyTwoHoursAgo.setHours(seventyTwoHoursAgo.getHours() - 72)
-      
-      const reportsToDelete = allReports.filter(r => new Date(r.created_at) < seventyTwoHoursAgo)
-      
-      let activeReports = allReports
-      
-      if (reportsToDelete.length > 0) {
-        await supabase
-          .from('reports')
-          .delete()
-          .in('id', reportsToDelete.map(r => r.id))
-        
-        activeReports = allReports.filter(r => new Date(r.created_at) >= seventyTwoHoursAgo)
-      }
-
-      setReports(activeReports)
-      setLoading(false)
-    }
-
-    loadData()
-  }, [])
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-[#635BFF] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    )
+  // Auto-delete reports older than 72 hours
+  const seventyTwoHoursAgo = new Date()
+  seventyTwoHoursAgo.setHours(seventyTwoHoursAgo.getHours() - 72)
+  
+  const reportsToDelete = allReports.filter(r => new Date(r.created_at) < seventyTwoHoursAgo)
+  
+  let activeReports = allReports
+  
+  if (reportsToDelete.length > 0) {
+    await supabase
+      .from('reports')
+      .delete()
+      .in('id', reportsToDelete.map(r => r.id))
+    
+    // Filter out deleted reports from our working set
+    activeReports = allReports.filter(r => new Date(r.created_at) >= seventyTwoHoursAgo)
   }
 
   // Calculate metrics
-  const totalReports = reports.length
-  const criticalRisk = reports.filter(r => r.risk_level === 'CRITICAL').length
-  const highRisk = reports.filter(r => r.risk_level === 'HIGH').length
-  const mediumRisk = reports.filter(r => r.risk_level === 'MEDIUM').length
-  const lowRisk = reports.filter(r => r.risk_level === 'LOW').length
+  const totalReports = activeReports.length
+  const criticalRisk = activeReports.filter(r => r.risk_level === 'CRITICAL').length
+  const highRisk = activeReports.filter(r => r.risk_level === 'HIGH').length
+  const mediumRisk = activeReports.filter(r => r.risk_level === 'MEDIUM').length
+  const lowRisk = activeReports.filter(r => r.risk_level === 'LOW').length
 
   const weekAgo = new Date()
   weekAgo.setDate(weekAgo.getDate() - 7)
-  const weekReports = reports.filter(r => new Date(r.created_at) >= weekAgo)
+  const weekReports = activeReports.filter(r => new Date(r.created_at) >= weekAgo)
 
   const highPriorityAlerts = weekReports
     .filter(r => r.risk_level === 'HIGH' || r.risk_level === 'CRITICAL')
@@ -89,11 +61,11 @@ export default function DashboardPage() {
   const needsReview = highRisk + mediumRisk
   const estimatedSaved = blockedDeals * 100000
   const dealQualityScore = totalReports > 0 ? Math.round((lowRisk / totalReports) * 100) : 0
-  const recentReports = reports.slice(0, 5)
+  const recentReports = activeReports.slice(0, 5)
 
   const thirtyDaysAgo = new Date()
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-  const last30DaysReports = reports
+  const last30DaysReports = activeReports
     .filter(r => new Date(r.created_at) >= thirtyDaysAgo)
     .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
 
@@ -144,47 +116,23 @@ export default function DashboardPage() {
               <SignOutButton />
             </div>
 
-            {/* Mobile menu button */}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-lg text-gray-700 hover:bg-gray-100 transition"
-              aria-label="Toggle menu"
-            >
-              {mobileMenuOpen ? (
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              ) : (
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              )}
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile Navigation */}
-        {mobileMenuOpen && (
-          <div className="md:hidden border-t border-gray-200 bg-white">
-            <nav className="px-4 py-4 space-y-2">
+            {/* Mobile Navigation - Simple stacked buttons */}
+            <div className="flex md:hidden items-center space-x-2">
               <Link
                 href="/analyze"
-                className="block px-4 py-3 bg-[#635BFF] text-white text-[15px] rounded-lg hover:bg-[#5851EA] transition font-medium text-center"
+                className="px-3 py-2 bg-[#635BFF] text-white text-[13px] rounded-lg hover:bg-[#5851EA] transition font-medium shadow-sm"
               >
-                New investigation
+                New
               </Link>
               <Link
                 href="/settings"
-                className="block px-4 py-3 text-gray-700 text-[15px] rounded-lg hover:bg-gray-50 transition font-medium border border-gray-300 text-center"
+                className="px-3 py-2 text-gray-700 text-[13px] rounded-lg hover:bg-gray-100 transition font-medium border border-gray-300"
               >
-                Edit Profile
+                Profile
               </Link>
-              <div className="pt-2">
-                <SignOutButton />
-              </div>
-            </nav>
+            </div>
           </div>
-        )}
+        </div>
       </header>
 
       <main className="relative pt-[64px] sm:pt-[72px]">
@@ -671,14 +619,14 @@ export default function DashboardPage() {
           <div>
             <div className="flex items-center justify-between mb-4 sm:mb-6">
               <h2 className="text-[22px] sm:text-[24px] lg:text-[28px] font-bold text-gray-900 tracking-[-0.01em]">Recent investigations</h2>
-              {reports.length > 5 && (
+              {activeReports.length > 5 && (
                 <Link href="/reports" className="text-[13px] sm:text-[14px] text-[#635BFF] hover:text-[#5851EA] font-medium">
                   View all →
                 </Link>
               )}
             </div>
 
-            {reports.length === 0 ? (
+            {activeReports.length === 0 ? (
               <div className="p-8 sm:p-12 lg:p-16 text-center bg-white/85 backdrop-blur-sm rounded-2xl border border-purple-100/50 shadow-inner">
                 <svg className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-4 sm:mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
