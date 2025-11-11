@@ -1,6 +1,6 @@
 'use client'
 
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/client'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import SignOutButton from '@/app/dashboard/SignOutButton'
@@ -15,7 +15,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     async function loadData() {
-      const supabase = await createClient()
+      const supabase = createClient()
       
       const { data: { user }, error: authError } = await supabase.auth.getUser()
       
